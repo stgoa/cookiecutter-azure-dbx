@@ -146,7 +146,7 @@ def dbutils_fixture() -> Iterator[None]:
     """
     logging.info("Patching the DBUtils object")
     with patch(
-        "dbx_smk_pe_elasticity.common.get_dbutils", lambda _: DBUtilsFixture()
+        "{{cookiecutter.package_name}}.common.get_dbutils", lambda _: DBUtilsFixture()
     ):
         yield
     logging.info("Test session finished, patching completed")
