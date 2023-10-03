@@ -1,0 +1,19 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+
+      - name: Install dependencies and run tests
+        run: docker build -t tester .
