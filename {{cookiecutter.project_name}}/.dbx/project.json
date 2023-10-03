@@ -1,0 +1,31 @@
+{
+    "environments": {
+        "dev": {
+            "profile": "dev",
+            "storage_type": "mlflow",
+            "properties": {
+                "workspace_directory": "/Shared/dbx/{{cookiecutter.package_name}}/dev_{{cookiecutter.package_name}}",
+                "artifact_location": "dbfs:/Shared/dbx/projects/{{cookiecutter.package_name}}/dev"
+            }
+        },
+        "staging": {
+            "profile": "staging",
+            "storage_type": "mlflow",
+            "properties": {
+                "workspace_directory": "/Shared/dbx/{{cookiecutter.package_name}}/staging_{{cookiecutter.package_name}}",
+                "artifact_location": "dbfs:/Shared/dbx/projects/{{cookiecutter.package_name}}/staging"
+            }
+        },
+        "prod": {
+            "profile": "prod",
+            "storage_type": "mlflow",
+            "properties": {
+                "workspace_directory": "/Shared/dbx/{{cookiecutter.package_name}}/prod_{{cookiecutter.package_name}}",
+                "artifact_location": "dbfs:/Shared/dbx/projects/{{cookiecutter.package_name}}/prod"
+            }
+        }
+    },
+    "inplace_jinja_support": false,
+    "failsafe_cluster_reuse_with_assets": false,
+    "context_based_upload_for_execute": false
+}

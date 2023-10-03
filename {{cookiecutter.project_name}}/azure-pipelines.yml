@@ -1,0 +1,89 @@
+pool: Azure Pipelines
+
+trigger: none
+
+pr:
+  autoCancel: true
+  branches:
+    include:
+      - main
+
+stages:
+  - stage: onMainPullRequest
+    # This stage is triggered when a PR is created into main
+    # For instance, if you create a PR from feature/1.0.0 to main, this stage will be triggered
+    # This stage will be skipped if the PR is created from release/* to main
+    condition: |
+      and(
+        not(startsWith(variables['System.PullRequest.SourceBranch'], 'refs/heads/release')),
+        startsWith(variables['System.PullRequest.TargetBranch'], 'refs/heads/main')
+      )
+    jobs:
+      - job: onPullRequestJob
+        workspace:
+          clean: all
+        steps:
+          - script: docker system prune -af --volumes
+            displayName: Remove docker unused data
+          - script: |
+              DOCKER_BUILDKIT=1 docker build \
+              --build-arg DATABRICKS_HOST=$(DATABRICKS-HOST) \
+              --build-arg DATABRICKS_TOKEN=$(DATABRICKS-TOKEN) \
+              --build-arg ARTIFACT_FEED=$(ARTIFACT-FEED) \
+              --build-arg USERNAME_FEED=$(USERNAME-FEED) \
+              --build-arg TOKEN_FEED=$(TOKEN-FEED) \
+              -t {{cookiecutter.workflow_name}} .
+            displayName: Build image
+          - script: |
+              docker run --rm -t {{cookiecutter.workflow_name}} poetry run \
+              dbfs cp resources/init_script.sh dbfs:/Shared/init_scripts/{{cookiecutter.package_name}}/staging_init_script.sh --overwrite
+            displayName: Copy init script to DBFS
+          - script: |
+              docker run --rm -t {{cookiecutter.workflow_name}} poetry run \
+              pytest tests/unit -s -vvv
+            displayName: Run unit tests
+          - script: |
+              docker run --rm -t {{cookiecutter.workflow_name}} poetry run \
+              dbx deploy staging-{{cookiecutter.workflow_name}} --environment staging
+            displayName: Deploy the job
+          - script: |
+              docker run --rm -t {{cookiecutter.workflow_name}} poetry run \
+              dbx launch staging-{{cookiecutter.workflow_name}} --environment staging --trace
+            displayName: Launch workflow
+
+  - stage: onRelease
+    # This stage is triggered when a PR is created from release/* to main
+    # For instance, if you create a PR from release/1.0.0 to main, this stage will be triggered
+    condition: |
+      and(
+        startsWith(variables['System.PullRequest.SourceBranch'], 'refs/heads/release'),
+        startsWith(variables['System.PullRequest.TargetBranch'], 'refs/heads/main')
+      )
+    jobs:
+      - job: onReleaseJob
+        workspace:
+          clean: all
+        steps:
+          - script: docker system prune -af --volumes
+            displayName: Remove docker unused data
+          - script: |
+              DOCKER_BUILDKIT=1 docker build \
+              --build-arg DATABRICKS_HOST=$(DATABRICKS-HOST) \
+              --build-arg DATABRICKS_TOKEN=$(DATABRICKS-TOKEN) \
+              --build-arg ARTIFACT_FEED=$(ARTIFACT-FEED) \
+              --build-arg USERNAME_FEED=$(USERNAME-FEED) \
+              --build-arg TOKEN_FEED=$(TOKEN-FEED) \
+              -t {{cookiecutter.workflow_name}} .
+            displayName: Build image
+          - script: |
+              docker run --rm -t {{cookiecutter.workflow_name}} poetry run \
+              dbfs cp resources/init_script.sh dbfs:/Shared/init_scripts/{{cookiecutter.package_name}}/prod_init_script.sh --overwrite
+            displayName: Copy init script to DBFS
+          - script: |
+              docker run --rm -t {{cookiecutter.workflow_name}} poetry run \
+              pytest tests/unit -s -vvv
+            displayName: Run unit tests
+          - script: |
+              docker run --rm -t {{cookiecutter.workflow_name}} poetry run \
+              dbx deploy prod-{{cookiecutter.workflow_name}} --environment prod
+            displayName: Deploy the job

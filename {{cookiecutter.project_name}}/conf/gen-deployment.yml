@@ -1,0 +1,67 @@
+f: !() # noqa
+  workflows:
+    - name: !? ("{0}-{{cookiecutter.workflow_name}}").format($.env)
+      tags:
+        env: !? $.env
+        project: "my-project"
+        pipeline: "{{cookiecutter.workflow_name}}"
+        area: "analytics"
+
+      !if $.env = 'prod':
+        email_notifications:
+          on_start: ["{{cookiecutter.author_email}}"]
+          on_success: ["{{cookiecutter.author_email}}"]
+          on_failure:
+            - "{{cookiecutter.author_email}}"
+        schedule:
+          quartz_cron_expression: "20 0 7 ? * Tue"
+          timezone_id: "America/Santiago"
+          pause_status: "UNPAUSED"
+
+      named_parameters: {"foo": "true","bar": "1"}
+
+      job_clusters:
+        - job_cluster_key: !? $.env
+          new_cluster:
+            spark_version: "11.3.x-cpu-ml-scala2.12"
+            policy_id: "cluster-policy://Job Compute"
+            driver_node_type_id: "Standard_F8"
+            node_type_id: "Standard_F8"
+            !if $.env = 'prod':
+              autoscale:
+                min_workers: 2
+                max_workers: 15
+            !if $.env = 'dev':
+              num_workers: 2
+            !if $.env = 'staging':
+              num_workers: 1
+
+            spark_env_vars:
+              PRIVATE_PACKAGE_1: "some-private-package"
+              PRIVATE_PACKAGE_2: "some-other-private-package==0.0.1"
+              EXTRA_INDEX_URL: "{cookiecutter.pypi_extra_index_url}"
+
+            spark_conf:
+              spark.databricks.session.share: 'true'
+
+            init_scripts:
+              - dbfs:
+                  destination: !? ("dbfs:/Shared/init_scripts/{{cookiecutter.package_name}}/{0}_init_script.sh").format($.env)
+      tasks:
+        - task_key: "sample-task"
+          job_cluster_key: !? $.env
+          python_wheel_task:
+              package_name: "{{cookiecutter.package_name}}"
+              entry_point: "sample_task"
+              parameters:
+              - "--conf-file"
+              - "file:fuse://conf/tasks/sample_task_config.yml"
+              - "--env"
+              - !? $.env
+build:
+  python: "poetry"
+
+environments:
+  dev: !? ($_.f)({ env => 'dev' })
+  prod: !? ($_.f)({ env => 'prod' })
+  staging: !? ($_.f)({ env => 'staging' })

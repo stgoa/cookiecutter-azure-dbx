@@ -1,0 +1,22 @@
+f: !() # noqa
+  experiment: !? ("/Shared/dbx/{{cookiecutter.package_name}}/{0}_{{cookiecutter.package_name}}").format($.env)
+  !if $.env != 'prod':
+    execution_date: "2023-03-14"
+
+  !if $.env != 'prod':
+    # filters used for testing on small data
+    sku_filter : ["314"]
+  !if $.env = 'staging':
+    store_filter : ["S101"]
+  model_kwargs:
+    max_iter: 100
+    tol: 0.0001
+    learning_rate: 0.1
+  database: !? $.env
+  table_name: "sample_data"
+  path: !? ("abfss://somecontainer@mydatalake.dfs.core.windows.net/{0}/sample_data").format($.env)
+
+env:
+  dev: !? ($_.f)({ env => 'dev' })
+  prod: !? ($_.f)({ env => 'prod' })
+  staging: !? ($_.f)({ env => 'staging' })
