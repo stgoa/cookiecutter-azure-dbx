@@ -5,6 +5,24 @@
 
 Cookiecutter-Azure-DBX is a Python project template designed for seamless development of PySpark Databricks workflows. Supercharge your projects with automated continuous integration in Azure and effortless Databricks workflow deployment using DBX.
 
+# Table of Contents
+
+- [Cookiecutter-Azure-DBX](#cookiecutter-azure-dbx)
+- [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [The CICD Azure Pipeline File](#the-cicd-azure-pipeline-file)
+    - [OnDevPullRequestJob](#ondevpullrequestjob)
+    - [OnMainPullRequestJob](#onmainpullrequestjob)
+    - [OnReleaseJob](#onreleasejob)
+  - [Pydantic Settings](#pydantic-settings)
+  - [Logging](#logging)
+  - [Custom Exceptions](#custom-exceptions)
+  - [Acknowledgments](#acknowledgments)
+  - [Usage](#usage)
+    - [Begginers: bake and copy](#begginers-bake-and-copy)
+    - [Advanced Users: Azure CLI Repository Creation](#advanced-users-azure-cli-repository-creation)
+  - [TODO](#todo)
+
 ## Features
 
 - [DBX](https://dbx.readthedocs.io/en/latest/) automatic deployment from within the CI/CD pipeline.
@@ -306,6 +324,49 @@ Special thanks to:
 - [Diego Garrido](https://github.com/dgarridoa) for their valuable work on the project [dbx-demand-forecast](https://github.com/dgarridoa/dbx-demand-forecast). Diego's project has been a source of inspiration and learning in the field of demand forecasting with Databricks.
 
 We are grateful for their valuable contributions and the open-source community's spirit of collaboration.
+
+## Usage
+### Begginers: bake and copy
+- **Step 1**: If not already installed in your system's Python, install Cookiecutter:
+```bash
+pip install cookiecutter
+```
+
+- **Step 2**: bake the project
+```bash
+cookiecutter gh:stgoa/cookiecutter-azure-dbx
+```
+- Step 3: Manually copy the files into the already existing repository and commit your changes.
+
+
+### Advanced Users: Azure CLI Repository Creation
+
+- **Step 1**: if not already installed, install all missing requirements:
+```bash
+# MacOS
+brew install azure-cli
+pip install azure-devops
+pip install cookiecutter
+cd path/to/projects/
+```
+
+- **Step 2**: Login (if necessary) and create the remote repository:
+```bash
+az login
+az repos create --name MyProjectName --project MyDevOpsProject --organization=https://dev.azure.com/MyOrgName/
+```
+
+- **Step 3**: bake and push the project:
+```bash
+cookiecutter gh:stgoa/cookiecutter-azure-dbx
+cd MyProjectName # this depends in the name chosen during the configuration
+git init
+git add .
+git commit -m "initial commit"
+git remote add origin https://MyOrgName@dev.azure.com/MyOrgName/MyDevOpsProject/_git/MyProjectName
+git push -u origin --all
+
+```
 
 
 ## TODO
