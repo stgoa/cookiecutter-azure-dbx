@@ -162,3 +162,5 @@ cython_debug/
 utf8_fail
 .vscode/
 poetry.lock
+
+MyProjectName/
