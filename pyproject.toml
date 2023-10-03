@@ -35,9 +35,6 @@ toml = "^0.10.2"
 requires = ["poetry-core"]
 build-backend = "poetry.core.mansonry.api"
 
-[tool.poetry.plugins."console_scripts"]
-"sample_task" = "{{cookiecutter.package_name}}.tasks.sample_task:entrypoint"
-
 [tool.pytest.ini_options]
 addopts = "--import-mode=importlib -s -p no:warnings"
 log_cli = 1
@@ -69,6 +66,7 @@ exclude = '''
   )/
 )
 '''
+
 [tool.coverage.report]
 exclude_lines = [
     "if self.debug:",
