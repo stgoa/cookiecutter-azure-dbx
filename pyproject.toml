@@ -48,8 +48,27 @@ log_level = "INFO"
 pythonpath = ["."]
 
 [tool.black]
-line-length = 79
-
+line-length = 88
+target-version = ['py36', 'py37', 'py38']
+include = '\.pyi?$'
+exclude = '''
+(
+  /(
+      \.eggs         # exclude a few common directories in the
+    | \.git          # root of the project
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | _build
+    | buck-out
+    | build
+    | (.*)/migrations
+    | dist
+    | {{cookiecutter.project_name}}
+  )/
+)
+'''
 [tool.coverage.report]
 
 exclude_lines = [
