@@ -4,7 +4,7 @@
 
 Before you begin using this project, ensure that you have Python 3.9 and `pip` for package management installed on your system.
 
-## Local environment setup
+## Local environment setup [MacOS]
 
 1. Install python
 
@@ -21,7 +21,7 @@ brew install poetry
 3. If you don't have JDK installed on your local machine, install it:
 
 ```bash
-brew install openjdk@11
+brew install openjdk@17
 ```
 
 4. Install project locally (this will also install dev requirements):
@@ -153,9 +153,12 @@ The task uses two main parameters. The first one is `--conf-file`, the configura
     - `max_iter`: Defines the maximum number of iterations in the optimization. (Default: 1000)
     - `tol`: Sets the tolerance level in the optimization. (Default: 0.0001)
 - `database`: Name of the database (both for input and output). It will be created if not exists. Delta tables are registered in it.
-- `table`: Name of the table with elasticity data
-- `path`: Path where the cross-elasticity data is stored
-
+- `input`:
+  - `table`: Name of the input table
+  - `path`: Path where the input data is stored
+- `output`:
+  - `table`: Name of the output table
+  - `path`: Path where the ouput data is stored
 
 ### Cluster policy
 
