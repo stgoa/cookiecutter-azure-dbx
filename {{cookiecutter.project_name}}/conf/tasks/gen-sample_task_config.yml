@@ -13,9 +13,12 @@ f: !() # noqa
     tol: 0.0001
     learning_rate: 0.1
   database: !? $.env
-  table_name: "sample_data"
-  path: !? ("abfss://somecontainer@mydatalake.dfs.core.windows.net/{0}/sample_data").format($.env)
-
+  input:
+    table: "some_transactions"
+    path: !? ("abfss://somecontainer@mydatalake.dfs.core.windows.net/{0}/some_transactions").format($.env)
+  output:
+    table: "sample_data"
+    path: !? ("abfss://somecontainer@mydatalake.dfs.core.windows.net/{0}/sample_data").format($.env)
 env:
   dev: !? ($_.f)({ env => 'dev' })
   prod: !? ($_.f)({ env => 'prod' })
