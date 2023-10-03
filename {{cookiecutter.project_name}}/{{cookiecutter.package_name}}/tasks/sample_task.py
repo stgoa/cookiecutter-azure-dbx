@@ -12,6 +12,9 @@ from {{cookiecutter.package_name}} import SETTINGS
 from {{cookiecutter.package_name}}.schemas.structs import (
    SampleDataSchema
 )
+from {{cookiecutter.package_name}}.schemas.names import (
+   SampleDataColNames
+)
 from {{cookiecutter.package_name}}.common import Task
 
 
