@@ -13,6 +13,7 @@ A Python Cookiecutter project template designed for seamless development Databri
 - Env vars loaded using [python-dotenv](https://github.com/theskumar/python-dotenv) from ``.env`` file.
 - Logger configured using [structlog](https://www.structlog.org/en/stable/) to save in json format and track function execution.
 - [Pydantic](https://pydantic-docs.helpmanual.io/) integration in settings as a class that inherits from ``pydantic.BaseSettings``.
+- [Yglu](https://yglu.io/) configuration DBX files
 
 ## Azure pipelines
 
@@ -139,6 +140,5 @@ class ExampleError(ErrorMixin, NameError):
 
 ## TODO
 
-- Test the cookiecutter project.
 - Write a better readme.
 - Write a better TODO.
