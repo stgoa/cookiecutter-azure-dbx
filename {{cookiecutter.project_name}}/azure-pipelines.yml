@@ -9,6 +9,31 @@ pr:
       - main
 
 stages:
+  - stage: onDevPullRequest
+    # This stage is triggered when a PR is created into dev
+    # For instance, if you create a PR from feature/1.0.0 to dev, this stage will be triggered
+    condition: |
+      startsWith(variables['System.PullRequest.TargetBranch'], 'refs/heads/dev')
+    jobs:
+      - job: onDevPullRequestJob
+        workspace:
+          clean: all
+        steps:
+          - script: docker system prune -af --volumes
+            displayName: Remove docker unused data
+          - script: |
+              DOCKER_BUILDKIT=1 docker build \
+              --build-arg DATABRICKS_HOST=$(DATABRICKS-HOST) \
+              --build-arg DATABRICKS_TOKEN=$(DATABRICKS-TOKEN) \
+              --build-arg ARTIFACT_FEED=$(ARTIFACT-FEED) \
+              --build-arg USERNAME_FEED=$(USERNAME-FEED) \
+              --build-arg TOKEN_FEED=$(TOKEN-FEED) \
+              -t stockflow .
+            displayName: Build image
+          - script: |
+              docker run --rm -t stockflow poetry run \
+              pytest tests/unit -s -vvv
+            displayName: Run unit tests
   - stage: onMainPullRequest
     # This stage is triggered when a PR is created into main
     # For instance, if you create a PR from feature/1.0.0 to main, this stage will be triggered
@@ -19,7 +44,7 @@ stages:
         startsWith(variables['System.PullRequest.TargetBranch'], 'refs/heads/main')
       )
     jobs:
-      - job: onPullRequestJob
+      - job: onMainPullRequestJob
         workspace:
           clean: all
         steps:
