@@ -2,6 +2,8 @@ FROM python:3.9 as base
 WORKDIR /app
 COPY . .
 RUN python -m pip install --upgrade pip
+RUN apt-get update
+RUN apt-get -y install openjdk-17-jdk
 RUN pip install poetry
 # Install the project dependencies to bake the Cookiecutter template
 RUN poetry install
