@@ -17,6 +17,9 @@ Cookiecutter-Azure-DBX is a Python project template designed for seamless develo
   - [Pydantic Settings](#pydantic-settings)
   - [Logging](#logging)
   - [Custom Exceptions](#custom-exceptions)
+  - [Excecution from UI and Databricks API with default parameters replacement](#excecution-from-ui-and-databricks-api-with-default-parameters-replacement)
+    - [UI](#ui)
+    - [API](#api)
   - [Acknowledgments](#acknowledgments)
   - [Usage](#usage)
     - [Begginers: bake and copy](#begginers-bake-and-copy)
@@ -35,7 +38,6 @@ Cookiecutter-Azure-DBX is a Python project template designed for seamless develo
 
 ## The CICD Azure Pipeline File
 
-
 Simple continuous integration using [Docker Tasks](https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/build/docker?view=azure-devops) to test and [DBX](https://dbx.readthedocs.io/en/latest/) to deploy the project.
 
 ### OnDevPullRequestJob
@@ -43,14 +45,15 @@ Simple continuous integration using [Docker Tasks](https://docs.microsoft.com/en
 This job is designed to perform tasks related to features pull requests. Below are the steps performed in this job:
 
 1. **Remove Docker Unused Data:**
+
    - Description: Prune Docker resources and volumes to ensure a clean environment.
    - Script:
      ```yaml
      script: docker system prune -af --volumes
      ```
    - DisplayName: Remove docker unused data
-
 2. **Build Docker Image:**
+
    - Description: Build a Docker image with the specified build arguments.
    - Script:
      ```yaml
@@ -64,30 +67,31 @@ This job is designed to perform tasks related to features pull requests. Below a
        -t {{cookiecutter.workflow_name}} .
      ```
    - DisplayName: Build image
+3. **Run Unit Tests:**
 
-3.  **Run Unit Tests:**
-   - Description: Execute unit tests using pytest.
-   - Script:
-     ```yaml
-     script: |
-       docker run --rm -t {{cookiecutter.workflow_name}} poetry run \
-       pytest tests/unit -s -vvv
-     ```
-   - DisplayName: Run unit tests
+- Description: Execute unit tests using pytest.
+- Script:
+  ```yaml
+  script: |
+    docker run --rm -t {{cookiecutter.workflow_name}} poetry run \
+    pytest tests/unit -s -vvv
+  ```
+- DisplayName: Run unit tests
 
 ### OnMainPullRequestJob
 
 This job is designed to perform tasks related to development pull requests with integration tests included. Below are the steps performed in this job:
 
 1. **Remove Docker Unused Data:**
+
    - Description: Prune Docker resources and volumes to ensure a clean environment.
    - Script:
      ```yaml
      script: docker system prune -af --volumes
      ```
    - DisplayName: Remove docker unused data
-
 2. **Build Docker Image:**
+
    - Description: Build a Docker image with the specified build arguments.
    - Script:
      ```yaml
@@ -101,8 +105,8 @@ This job is designed to perform tasks related to development pull requests with 
        -t {{cookiecutter.workflow_name}} .
      ```
    - DisplayName: Build image
-
 3. **Copy Init Script to DBFS:**
+
    - Description: Copy an initialization script to Databricks File System (DBFS).
    - Script:
      ```yaml
@@ -111,8 +115,8 @@ This job is designed to perform tasks related to development pull requests with 
        dbfs cp resources/init_script.sh dbfs:/Shared/init_scripts/{{cookiecutter.package_name}}/staging_init_script.sh --overwrite
      ```
    - DisplayName: Copy init script to DBFS
-
 4. **Run Unit Tests:**
+
    - Description: Execute unit tests using pytest.
    - Script:
      ```yaml
@@ -121,8 +125,8 @@ This job is designed to perform tasks related to development pull requests with 
        pytest tests/unit -s -vvv
      ```
    - DisplayName: Run unit tests
-
 5. **Deploy the Job:**
+
    - Description: Deploy the job to the staging environment using `dbx`.
    - Script:
      ```yaml
@@ -131,8 +135,8 @@ This job is designed to perform tasks related to development pull requests with 
        dbx deploy staging-{{cookiecutter.workflow_name}} --environment staging
      ```
    - DisplayName: Deploy the job
-
 6. **Launch Workflow:**
+
    - Description: Launch the workflow in the staging environment using `dbx`.
    - Script:
      ```yaml
@@ -147,14 +151,15 @@ This job is designed to perform tasks related to development pull requests with 
 This job is triggered when a pull request is created from the release branch to the main branch. It handles tasks related to releasing new productive versions. Here are the steps performed in this job:
 
 1. **Remove Docker Unused Data:**
+
    - Description: Prune Docker resources and volumes to ensure a clean environment.
    - Script:
      ```yaml
      script: docker system prune -af --volumes
      ```
    - DisplayName: Remove docker unused data
-
 2. **Build Docker Image:**
+
    - Description: Build a Docker image with the specified build arguments.
    - Script:
      ```yaml
@@ -168,8 +173,8 @@ This job is triggered when a pull request is created from the release branch to 
        -t {{cookiecutter.workflow_name}} .
      ```
    - DisplayName: Build image
-
 3. **Copy Init Script to DBFS:**
+
    - Description: Copy an initialization script to Databricks File System (DBFS).
    - Script:
      ```yaml
@@ -178,8 +183,8 @@ This job is triggered when a pull request is created from the release branch to 
        dbfs cp resources/init_script.sh dbfs:/Shared/init_scripts/{{cookiecutter.package_name}}/prod_init_script.sh --overwrite
      ```
    - DisplayName: Copy init script to DBFS
-
 4. **Run Unit Tests:**
+
    - Description: Execute unit tests using pytest.
    - Script:
      ```yaml
@@ -188,8 +193,8 @@ This job is triggered when a pull request is created from the release branch to 
        pytest tests/unit -s -vvv
      ```
    - DisplayName: Run unit tests
-
 5. **Deploy the Job:**
+
    - Description: Deploy the job to the production environment using `dbx`.
    - Script:
      ```yaml
@@ -198,8 +203,6 @@ This job is triggered when a pull request is created from the release branch to 
        dbx deploy prod-{{cookiecutter.workflow_name}} --environment prod
      ```
    - DisplayName: Deploy the job
-
-
 
 ## Pydantic Settings
 
@@ -243,9 +246,7 @@ class Settings(BaseSettings):
 You have three options to set the value for `CONNECTION_STRING`:
 
 1. **Inside the Class Definition (Not Recommended for Passwords):** You can directly write the value inside the `Settings` class definition. However, this approach is not recommended for sensitive information like passwords.
-
 2. **Using the `export` Command (Unix-like Systems) or `set` (Windows):** You can use the `export` command on Unix-like systems or `set` on Windows to set the value of the `CONNECTION_STRING` environment variable.
-
 3. **Using a Configuration File (Recommended):** The easiest and recommended way is to write the `CONNECTION_STRING` in the configuration file named `.env`, located at the root of the project. Environment variables should be prefixed with `MY_PACKAGE_`, which is the name of the package in uppercase. Below is an example of an `.env` file with a simple PostgreSQL connection string:
 
 ```env
@@ -270,10 +271,9 @@ In this example, we use SQLAlchemy to create a database engine using the `CONNEC
 A comprehensive logger is configured using `structlog`. You can control the logger's behavior through attributes in the settings class:
 
 - `LOG_FORMAT`: This attribute can have two possible values, `JSON` or `COLOR` (the latter requires [colorama](https://github.com/tartley/colorama)). `JSON` provides structured JSON-format logs, while `COLOR` adds colorization for console output.
-
 - `LOG_DESTINATION`: You can set this attribute to either `CONSOLE` or `FILE`. If you choose `FILE`, you must also specify the `LOG_PATH` attribute, which indicates the file where logs will be saved.
-
 - `LOG_LEVEL`: This attribute sets the logging level for the logger, following the same levels as the [logging](https://docs.python.org/3/library/logging.html) module. The available levels include:
+
   - `logger.debug`: For debug-level messages.
   - `logger.info`: For informational messages.
   - `logger.warning`: For warning messages.
@@ -316,32 +316,71 @@ class ExampleError(ErrorMixin, NameError):
 
 In this example, the ExampleError class inherits from ``ErrorMixin`` and ``NameError``. It provides a ``msg_template`` attribute where you can define a message template with placeholders like ``{variable}``. When you raise this exception and pass values for these placeholders as keyword arguments, they will be rendered in the error message.
 
+## Excecution from UI and Databricks API with default parameters replacement
+
+### UI
+
+To trigger the workflow using the UI, follow these steps:
+
+1. Navigate to your Databricks workspace.
+2. Open the Databricks workspace, and select the desired job or workflow.
+3. Click on the job or workflow to view its details.
+4. In the job details, find and click the "Run Now" or equivalent button.
+5. Replace the parameters' configuration values as needed.
+6. Confirm and execute the job.
+
+### API
+
+To trigger the workflow using the Databricks API, you can send a POST request to the following endpoint:
+
+**POST**: `<DATABRICKS-HOST>/api/2.0/jobs/run-now`
+
+Include the following JSON body in your request:
+
+```json
+{
+  "job_id": 1234567, // Replace with the actual job ID
+  "idempotency_token": "test1", // Optional, use for idempotent requests
+  "python_named_params": {
+    "foo": "42", // Replace with your parameter values
+    "bar": "baz"
+  }
+}
+```
+
+By following these steps, you can trigger the workflow both from the Databricks UI and programmatically using the Databricks API. Remember to replace the placeholders with actual values as needed for your specific use case.
 
 ## Acknowledgments
 
 Special thanks to:
+
 - [Andres Sandoval](https://github.com/andresliszt) for their work on the original project [cookiecutter-azure-poetry](https://github.com/andresliszt/cookiecutter-azure-poetry), which served as the inspiration and foundation for this project.
 - [Diego Garrido](https://github.com/dgarridoa) for their valuable work on the project [dbx-demand-forecast](https://github.com/dgarridoa/dbx-demand-forecast). Diego's project has been a source of inspiration and learning in the field of demand forecasting with Databricks.
 
 We are grateful for their valuable contributions and the open-source community's spirit of collaboration.
 
 ## Usage
+
 ### Begginers: bake and copy
+
 - **Step 1**: If not already installed in your system's Python, install Cookiecutter:
+
 ```bash
 pip install cookiecutter
 ```
 
 - **Step 2**: bake the project
+
 ```bash
 cookiecutter gh:stgoa/cookiecutter-azure-dbx
 ```
-- Step 3: Manually copy the files into the already existing repository and commit your changes.
 
+- Step 3: Manually copy the files into the already existing repository and commit your changes.
 
 ### Advanced Users: Azure CLI Repository Creation
 
 - **Step 1**: if not already installed, install all missing requirements:
+
 ```bash
 # MacOS
 brew install azure-cli
@@ -351,12 +390,14 @@ cd path/to/projects/
 ```
 
 - **Step 2**: Login (if necessary) and create the remote repository:
+
 ```bash
 az login
 az repos create --name MyProjectName --project MyDevOpsProject --organization=https://dev.azure.com/MyOrgName/
 ```
 
 - **Step 3**: bake and push the project:
+
 ```bash
 cookiecutter gh:stgoa/cookiecutter-azure-dbx
 cd MyProjectName # this depends in the name chosen during the configuration
@@ -367,7 +408,6 @@ git remote add origin https://MyOrgName@dev.azure.com/MyOrgName/MyDevOpsProject/
 git push -u origin --all
 
 ```
-
 
 ## TODO
 
