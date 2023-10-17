@@ -1,11 +1,14 @@
 from abc import ABC, abstractmethod
 from argparse import ArgumentParser
+import json
 from typing import Dict, Any
 import yaml
 import pathlib
 from pyspark.sql import SparkSession
 import sys
 
+from typing import Optional
+from pydantic import BaseModel, validator
 
 def get_dbutils(
     spark: SparkSession,
@@ -21,6 +24,43 @@ def get_dbutils(
     except ImportError:
         return None
 
+class OptionalParams(BaseModel):
+    env : Optional[str] = None
+    # add your optional parameters here
+    foo : Optional[str] = None
+    bar : Optional[str] = None
+
+    @validator(
+        "env",
+    )
+    def validate_environment(cls, value):
+        if value is None:
+            return value
+        if value not in {"dev", "prod", "staging"}:
+            raise ValueError(
+                f"Invalid value {value} for environment. Must be one of dev, prod, staging"
+            )
+        return value
+
+    @classmethod
+    def add_fields_as_arguments(cls, parser: ArgumentParser):
+        for field_name, field_type in cls.__annotations__.items():
+            if (
+                hasattr(field_type, "__args__")
+                and type(None) in field_type.__args__
+            ):
+                # Handle Optional[T] types
+                parser.add_argument(
+                    f"--{field_name}",
+                    type=field_type.__args__[0],
+                    required=False,
+                )
+            else:
+                # Handle non-Optional[T] types
+                # this raises an ArgumentError if the field is not provided
+                parser.add_argument(
+                    f"--{field_name}", type=field_type, required=True
+                )
 
 class Task(ABC):
     """
@@ -41,7 +81,8 @@ class Task(ABC):
         if init_conf:
             self.conf = init_conf
         else:
-            self.conf = self._provide_config()
+            # parse arguments and set configuration
+            self._set_config()
         self._log_conf()
 
     @staticmethod
@@ -61,35 +102,52 @@ class Task(ABC):
 
         return utils
 
-    def _provide_config(self):
+    def _set_config(self):
         self.logger.info("Reading configuration from --conf-file job option")
-        conf_file = self._get_conf_file()
-        env = self._get_env()
+        p = ArgumentParser()
+        # this are required arguments
+        p.add_argument("--conf-file", required=False, type=str)
+        p.add_argument("--named_parameters", required=False, type=str)
+        # this are optional arguments
+        OptionalParams.add_fields_as_arguments(p)
+        # parse arguments
+        namespace = p.parse_args(sys.argv[1:])
+        # transform namespace to dict
+        args = vars(namespace)
+        # parse the optional arguments using pydantic's BaseModel
+        input_params = OptionalParams(**args)
+
+        # get the conf file path and env
+        conf_file = args.get("conf_file")
+
         if not conf_file:
             self.logger.info(
                 "No conf file was provided, setting config to empty dict."
                 "Please override configuration in subclass init method"
             )
-            return {}
-        else:
-            self.logger.info(
-                f"Conf file was provided, reading config from {conf_file}"
-            )
-            return self._read_config(conf_file, env)
+            self.conf = {}
+            return
+        self.logger.info(
+            f"Conf file was provided, reading config from {conf_file}"
+        )
+        self.conf = self._read_config(conf_file, env=input_params.env)
 
-    @staticmethod
-    def _get_conf_file():
-        p = ArgumentParser()
-        p.add_argument("--conf-file", required=False, type=str)
-        namespace = p.parse_known_args(sys.argv[1:])[0]
-        return namespace.conf_file
+        # override config with arguments (except null values)
+        for key, value in input_params.dict().items():
+            if value is not None:
+                self.conf[key] = value
 
-    @staticmethod
-    def _get_env():
-        p = ArgumentParser()
-        p.add_argument("--env", required=False, type=str)
-        namespace = p.parse_known_args(sys.argv[1:])[0]
-        return namespace.env
+        # get metadata of the current run
+        metadata = json.loads(
+            self.dbutils.notebook.entry_point.getDbutils()
+            .notebook()
+            .getContext()
+            .toJson()
+        )
+        # global run id
+        self.conf["multitaskParentRunId"] = metadata["tags"].get(
+            "multitaskParentRunId"
+        )
 
     @staticmethod
     def _read_config(conf_file, env=None) -> Dict[str, Any]:
@@ -104,12 +162,7 @@ class Task(ABC):
         return logger
 
     def _log_conf(self):
-        # log parameters
-        self.logger.info("Launching job with configuration parameters:")
-        for key, item in self.conf.items():
-            self.logger.info(
-                "\t Parameter: %-30s with value => %-30s" % (key, item)
-            )
+        self.logger.info(f"Launching job with configuration parameters: \n{yaml.dump(self.conf)}")
 
     @abstractmethod
     def launch(self):
