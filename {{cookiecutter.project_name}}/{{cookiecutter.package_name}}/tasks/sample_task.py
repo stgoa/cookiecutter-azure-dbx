@@ -27,7 +27,6 @@ class SampleTask(Task):
         super().__init__(spark, init_conf)
         self.spark.sql(f'CREATE SCHEMA IF NOT EXISTS {self.conf["database"]}')
         self._update_conf()
-        self.logger.info(f"Configuration: \n{yaml.dump(self.conf)}")
 
     def _update_conf(self) -> None:
         """Updates the configuration with the execution date"""
@@ -39,6 +38,7 @@ class SampleTask(Task):
             ).date()
 
         self.conf["execution_date"] = execution_date  # type: datetime
+        self.logger.info(f"Execution date: {self.conf['execution_date']}")
 
     def _compute_data(self) -> DataFrame:
         self.logger.info("compute data subtask started")

@@ -1,6 +1,6 @@
 # {{cookiecutter.package_name}}
 
-**{{cookiecutter.package_name}}** is a project that automates the deployment of blah blah, utilizing dbx.
+{{cookiecutter.project_short_description}}.
 
 Before you begin using this project, ensure that you have Python 3.9 and `pip` for package management installed on your system.
 

@@ -106,3 +106,6 @@ venv.bak/
 *.Docker
 docker-compose.yml
 azure-pipelines.yml
+
+# poetry
+poetry.lock

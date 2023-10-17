@@ -7,22 +7,23 @@ authors = ["{{cookiecutter.author_name}} <{{cookiecutter.author_email}}>"]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.11"
-structlog = "^20.2.0"
-python-dotenv = "^0.15.0"
-pydantic = "^1.7.3"
+pydantic = ">=1.10.0,<2.0.0"
+structlog = "*"
+python-dotenv = "*"
+mlflow = "*"
+pandas = "*"
 # my-private-pkg = {version = "0.2.2", source = "privatefeed"}
 
 [tool.poetry.group.dev.dependencies]
 pyspark = "^3.3.1"
 delta-spark = "^2.2.0"
-scikit-learn = "*"
-pandas = "*"
-mlflow = "*"
+databricks-cli = ">=0.17.7"
+yglu = "^1.1.1"
+dbx = ">=0.8.12"
 
 [tool.poetry.group.test.dependencies]
 coverage ="*"
 pytest-cov = "*"
-dbx = "^0.8.7"
 pytest = ">=7.1.3,<8.0.0"
 autopep8 = "^2.0.2"
 docformatter = "^1.7.5"
@@ -34,12 +35,12 @@ bandit = "^1.7.5"
 black = "^23.7.0"
 pre-commit = "^3.3.3"
 toml = "^0.10.2"
-yglu = "^1.1.1"
+
 
 [[tool.poetry.source]]
 name = "privatefeed"
 url = "https://my-pypi.pkgs.visualstudio.com/_packaging/my-feed/pypi/simple"
-secondary = true
+priority = "explicit"
 
 [build-system]
 requires = ["poetry-core"]
