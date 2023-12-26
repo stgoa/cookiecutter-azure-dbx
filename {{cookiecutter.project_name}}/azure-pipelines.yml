@@ -28,10 +28,10 @@ stages:
               --build-arg ARTIFACT_FEED=$(ARTIFACT-FEED) \
               --build-arg USERNAME_FEED=$(USERNAME-FEED) \
               --build-arg TOKEN_FEED=$(TOKEN-FEED) \
-              -t stockflow .
+              -t {{cookiecutter.workflow_name}} .
             displayName: Build image
           - script: |
-              docker run --rm -t stockflow poetry run \
+              docker run --rm -t {{cookiecutter.workflow_name}} poetry run \
               pytest tests/unit -s -vvv
             displayName: Run unit tests
   - stage: onMainPullRequest
@@ -59,10 +59,6 @@ stages:
               --build-arg TOKEN_FEED=$(TOKEN-FEED) \
               -t {{cookiecutter.workflow_name}} .
             displayName: Build image
-          - script: |
-              docker run --rm -t {{cookiecutter.workflow_name}} poetry run \
-              dbfs cp resources/init_script.sh dbfs:/Shared/init_scripts/{{cookiecutter.package_name}}/staging_init_script.sh --overwrite
-            displayName: Copy init script to DBFS
           - script: |
               docker run --rm -t {{cookiecutter.workflow_name}} poetry run \
               pytest tests/unit -s -vvv
@@ -100,10 +96,6 @@ stages:
               --build-arg TOKEN_FEED=$(TOKEN-FEED) \
               -t {{cookiecutter.workflow_name}} .
             displayName: Build image
-          - script: |
-              docker run --rm -t {{cookiecutter.workflow_name}} poetry run \
-              dbfs cp resources/init_script.sh dbfs:/Shared/init_scripts/{{cookiecutter.package_name}}/prod_init_script.sh --overwrite
-            displayName: Copy init script to DBFS
           - script: |
               docker run --rm -t {{cookiecutter.workflow_name}} poetry run \
               pytest tests/unit -s -vvv
