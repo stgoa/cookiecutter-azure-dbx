@@ -12,6 +12,7 @@ structlog = "*"
 python-dotenv = "*"
 mlflow = "*"
 pandas = "*"
+# the env var PIP_EXTRA_INDEX_URL (defined in the policy) is used to install private packages
 # my-private-pkg = {version = "0.2.2", source = "privatefeed"}
 
 [tool.poetry.group.dev.dependencies]
@@ -60,6 +61,9 @@ pythonpath = ["."]
 
 [tool.black]
 line-length = 79
+
+[tool.bandit.assert_used]
+skips = ['*_test.py', '*/test_*.py']
 
 [tool.coverage.run]
 branch = true
