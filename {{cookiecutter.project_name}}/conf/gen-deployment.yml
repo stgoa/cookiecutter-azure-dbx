@@ -18,8 +18,6 @@ f: !() # noqa
           timezone_id: "America/Santiago"
           pause_status: "UNPAUSED"
 
-      named_parameters: {"foo": "true","bar": "1"}
-
       job_clusters:
         - job_cluster_key: !? $.env
           new_cluster:
@@ -36,28 +34,15 @@ f: !() # noqa
             !if $.env = 'staging':
               num_workers: 1
 
-            spark_env_vars:
-              PRIVATE_PACKAGE_1: "some-private-package"
-              PRIVATE_PACKAGE_2: "some-other-private-package==0.0.1"
-              EXTRA_INDEX_URL: "{cookiecutter.pypi_extra_index_url}"
-
-            spark_conf:
-              spark.databricks.session.share: 'true'
-
-            init_scripts:
-              - dbfs:
-                  destination: !? ("dbfs:/Shared/init_scripts/{{cookiecutter.package_name}}/{0}_init_script.sh").format($.env)
       tasks:
         - task_key: "sample-task"
           job_cluster_key: !? $.env
           python_wheel_task:
               package_name: "{{cookiecutter.package_name}}"
               entry_point: "sample_task"
-              parameters:
-              - "--conf-file"
-              - "file:fuse://conf/tasks/sample_task_config.yml"
-              - "--env"
-              - !? $.env
+              named_parameters:
+                conf-file: "file:fuse://conf/tasks/sample_task_config.yml"
+                env: !? $.env
 build:
   python: "poetry"
 
